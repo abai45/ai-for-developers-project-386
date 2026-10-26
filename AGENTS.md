@@ -24,3 +24,13 @@
 - Коммиты строго по Conventional Commits: `feat:`, `fix:`, `docs:`, `chore:`, `test:`, `refactor:`, `ci:`.
 - Архитектурные решения фиксируются в `docs/decisions.md` до реализации.
 - `mise run check` должен быть зелёным до каждого push; проверки не редактируются под задачу.
+
+## Agent skills
+
+### Issue tracker
+
+Issues живут в GitHub Issues этого репозитория (`abai45/ai-for-developers-project-386`), всё через `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Single-context: `GLOSSARY.md` в корне, решения — в `docs/adr/`. See `docs/agents/domain.md`.
