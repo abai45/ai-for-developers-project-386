@@ -9,7 +9,7 @@ export default function LandingPage() {
         события, время и продолжительность.
       </h1>
       <Link
-        to="/start"
+        to="/book"
         className={buttonVariants({ size: 'lg', className: 'px-6 text-base' })}
       >
         Начать работу

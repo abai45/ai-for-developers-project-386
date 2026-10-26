@@ -16,35 +16,35 @@ function renderAt(path: string) {
 describe('главный экран', () => {
   it('лендинг: заголовок и кнопка «Начать работу»', () => {
     renderAt('/')
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+      'Сервис для создания и бронирования встреч за минуту',
+    )
     expect(
-      screen.getByRole('heading', { level: 1 }),
-    ).toHaveTextContent('Сервис для создания и бронирования встреч за минуту')
-    expect(screen.getByRole('link', { name: 'Начать работу' })).toBeInTheDocument()
+      screen.getByRole('link', { name: 'Начать работу' }),
+    ).toBeInTheDocument()
   })
 
-  it('клик «Начать работу» ведёт на экран выбора', () => {
+  it('клик «Начать работу» ведёт гостя к бронированию', () => {
     renderAt('/')
     fireEvent.click(screen.getByRole('link', { name: 'Начать работу' }))
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Что вы хотите сделать?' }),
+      screen.getByRole('heading', {
+        level: 1,
+        name: 'Присоединиться ко встрече',
+      }),
     ).toBeInTheDocument()
   })
 
-  it('экран выбора содержит две карточки', () => {
-    renderAt('/start')
-    expect(
-      screen.getByRole('link', { name: /Создать встречу/ }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('link', { name: /Присоединиться ко встрече/ }),
-    ).toBeInTheDocument()
+  it('ссылка владельца есть в футере', () => {
+    renderAt('/')
+    expect(screen.getByRole('link', { name: 'Владелец' })).toBeInTheDocument()
   })
 
-  it('клик по карточке ведёт на её маршрут', () => {
-    renderAt('/start')
-    fireEvent.click(screen.getByRole('link', { name: /Присоединиться ко встрече/ }))
+  it('клик по ссылке «Владелец» ведёт в админскую часть', () => {
+    renderAt('/')
+    fireEvent.click(screen.getByRole('link', { name: 'Владелец' }))
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Присоединиться ко встрече' }),
+      screen.getByRole('heading', { level: 1, name: 'Создать встречу' }),
     ).toBeInTheDocument()
     expect(screen.getByText('Раздел в разработке')).toBeInTheDocument()
   })
