@@ -1,0 +1,20 @@
+# Java / Maven
+backend/target/
+*.class
+*.jar
+!mvnw.jar
+
+# Node / Vite
+frontend/node_modules/
+frontend/dist/
+*.tsbuildinfo
+
+# Окружение и IDE
+.env
+.env.local
+.idea/
+.vscode/
+.DS_Store
+
+# mise
+.mise.local.toml

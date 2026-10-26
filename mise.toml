@@ -1,0 +1,49 @@
+# Окружение разработки проекта «Календарь звонков»
+# Версии инструментов и команды фиксируются здесь — локально и в CI.
+
+[settings]
+experimental = true
+
+[tools]
+java = "temurin-21"
+node = "22"
+
+[tasks.setup]
+description = "Установить зависимости проекта"
+run = [
+  "cd backend && ./mvnw -B -q dependency:go-offline",
+  "cd frontend && npm install",
+]
+
+[tasks.check]
+description = "Все проверки: тесты, линт, типы, сборка (то же выполняет CI)"
+run = [
+  "cd backend && ./mvnw -B verify",
+  "cd frontend && npm run lint",
+  "cd frontend && npm run test",
+  "cd frontend && npm run build",
+]
+
+[tasks.backend-test]
+description = "Тесты бекенда (JUnit 5)"
+run = "cd backend && ./mvnw -B test"
+
+[tasks.frontend-test]
+description = "Тесты фронтенда (Vitest)"
+run = "cd frontend && npm run test"
+
+[tasks.backend]
+description = "Запустить бекенд (foreground, :8080)"
+run = "cd backend && ./mvnw spring-boot:run"
+
+[tasks.frontend]
+description = "Запустить фронтенд (foreground, :5173)"
+run = "cd frontend && npm run dev"
+
+[daemons.backend]
+run = "cd backend && ./mvnw spring-boot:run"
+port = 8080
+
+[daemons.frontend]
+run = "cd frontend && npm run dev"
+port = 5173
