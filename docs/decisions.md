@@ -76,6 +76,24 @@
 - **Компоненты** — база shadcn: `Skeleton`, `Button`, `Alert`, `Card`, `Label`, `Input`; кастом — только сетка месяца по референсу
 - **Секции `screens.md`** — порядок: Общие правила → Лендинг `/` → Владелец `/owner` (#3) → Гость `/book` с экраном «Вы записаны» (#4)
 
+## Контракт: структура и форма TypeSpec (вопрос карты #2, 31.10.2026)
+
+- **Где живёт контракт** — исходники TypeSpec в `docs/spec/tsp/`: `main.tsp` (импорты, `@service`), `models.tsp`, `routes.tsp`, `errors.tsp`, `package.json` + lockfile (пины `@typespec/compiler`, `@typespec/openapi3`), `tspconfig.yaml`; генерат — `docs/openapi.json` (коммитится, дрейф-чек в `mise run check`)
+- **Метаданные сервиса** — `@service({ title: "Календарь звонков API", version: "1.0.0" })`, OpenAPI 3.1
+- **Операции** — `createEventType`, `listEventTypes`, `listSlots`, `createMeeting`, `listMeetings`, `healthCheck`; пути: `POST /api/event-types`, `GET /api/event-types`, `GET /api/event-types/{eventTypeId}/slots`, `POST /api/meetings`, `GET /api/meetings`, `GET /api/health`; query-параметров нет (окно и рабочее время зафиксированы на сервере); `health` отвечает `200` без тела
+- **Нейминг** — `Booking` → `Meeting` (глоссарий запрещает «booking» для «Встречи»); черновики модели и эндпоинтов ниже исправлены на `Meeting` / `/api/meetings`
+- **Модели** —
+  - `EventType`: `name` required 1–100, `description` optional до 500 (отсутствует = пусто), `durationMinutes` 1–510, `slotStepMinutes` 1..`durationMinutes` (кросс-полевая проверка — серверная); в ответах вместе с `id`
+  - `Slot`: `{ start, end, status: "free" | "occupied" }` — строковый enum; ответ эндпоинта слотов — голый массив слотов
+  - `Meeting`: `eventTypeId`, `guestName` required 1–100, `start`; `end` — только в ответе, вычисляется сервером
+- **Время** — `offsetDateTime` во всех моделях (→ OpenAPI `date-time`, Java `OffsetDateTime`, TS `string`)
+- **Ошибки** — единая модель `ProblemDetails` с `@error` (`type: "about:blank"`, `title`, `status`, `detail` на русском; массив `errors: [{ field, message }]` для `400`); `application/problem+json` для всех `400`/`404`/`409`
+- **Теги** — `event-types`, `meetings`, `health`; русские описания через `@tagDoc`; openapi-generator режет контроллеры по тегам
+- **Двойная генерация** —
+  - коммитим только `docs/openapi.json` и `frontend/src/lib/api/schema.d.ts` — оба с дрейф-чеком в `mise run check`
+  - Java: openapi-generator-maven-plugin на `generate-sources`, конфиг `backend/openapi-generator.yml` (generator `spring`, `interfaceOnly=true`, `useTags=true`, `dateLibrary=java8`, Jackson); `basePackage: io.github.abai45.backend` → интерфейсы контроллеров в `...backend.api`, DTO в `...backend.model`; сгенерированный код не коммитится
+  - TS: openapi-typescript из `docs/openapi.json` → `frontend/src/lib/api/schema.d.ts`; openapi-fetch-обёртка пишется руками (`frontend/src/lib/api/client.ts`)
+
 ## Главный экран (интервью 26.10.2026)
 
 Первая фича — статические экраны без API.
@@ -92,7 +110,7 @@
 
 ```
 EventType   id, name, description, durationMinutes, slotStepMinutes
-Booking     id, eventTypeId, guestName, start, end
+Meeting     id, eventTypeId, guestName, start, end
             end = start + durationMinutes, вычисляется на сервере
 ```
 
@@ -102,9 +120,9 @@ Booking     id, eventTypeId, guestName, start, end
 |---|---|---|
 | POST | `/api/event-types` | создать тип встречи (владелец) |
 | GET | `/api/event-types` | список типов встреч |
-| GET | `/api/event-types/{id}/slots` | слоты окна на 14 дней вперёд, статус `free` / `occupied` |
-| POST | `/api/bookings` | записаться: `{ eventTypeId, guestName, start }` |
-| GET | `/api/bookings` | предстоящие встречи владельца |
+| GET | `/api/event-types/{eventTypeId}/slots` | слоты окна на 14 дней вперёд, статус `free` / `occupied` |
+| POST | `/api/meetings` | записаться: `{ eventTypeId, guestName, start }` |
+| GET | `/api/meetings` | предстоящие встречи владельца |
 | GET | `/api/health` | дымовой эндпоинт, отвечает 200 |
 
 Коды ошибок: `400` — невалидные параметры, `404` — неизвестный тип встречи,
@@ -129,10 +147,11 @@ Booking     id, eventTypeId, guestName, start, end
 ## Структура репозитория
 
 ```
-api/        TypeSpec-контракт и сгенерированный OpenAPI
-backend/    Spring Boot (Maven)
-frontend/   React + Vite + shadcn/ui
-docs/       Решения по проекту
+backend/           Spring Boot (Maven)
+frontend/          React + Vite + shadcn/ui
+docs/              Решения по проекту и спецификация
+docs/spec/tsp/     TypeSpec-контракт (исходники)
+docs/openapi.json  Сгенерированный OpenAPI 3.1 (коммитится)
 ```
 
 ## Задачи этапа каркаса (Задача 2)
