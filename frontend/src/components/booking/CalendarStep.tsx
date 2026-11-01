@@ -190,6 +190,7 @@ export default function CalendarStep({
                     return (
                       <button
                         key={dayKey}
+                        data-day={dayKey}
                         type="button"
                         disabled={!clickable}
                         onClick={() => onPickDay(dayKey)}
