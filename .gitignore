@@ -1,5 +1,6 @@
 # Java / Maven
 backend/target/
+backend/src/main/resources/static/
 *.class
 *.jar
 !mvnw.jar
