@@ -74,6 +74,51 @@
           }
         }
       }
+    },
+    "/api/event-types/{eventTypeId}/slots": {
+      "get": {
+        "operationId": "listSlots",
+        "description": "Слоты записи типа встречи: окно 14 календарных дней со следующего дня,\nрабочее время 09:30–18:00 Asia/Almaty; голый массив по возрастанию времени.",
+        "parameters": [
+          {
+            "name": "eventTypeId",
+            "in": "path",
+            "required": true,
+            "description": "Идентификатор типа встречи",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Slot"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ответ 404 — запрошенный объект не найден.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "event-types"
+        ]
+      }
     }
   },
   "components": {
@@ -184,6 +229,39 @@
           }
         },
         "description": "Описание ошибки по RFC 9457 (application/problem+json) — единая модель\nдля всех ошибок сервиса."
+      },
+      "Slot": {
+        "type": "object",
+        "required": [
+          "start",
+          "end",
+          "status"
+        ],
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Начало слота — время владельца (Asia/Almaty) со смещением."
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Окончание слота = начало + длительность типа."
+          },
+          "status": {
+            "$ref": "#/components/schemas/SlotStatus",
+            "description": "Статус слота: свободен или занят."
+          }
+        },
+        "description": "Слот записи: интервал от начала до конца встречи."
+      },
+      "SlotStatus": {
+        "type": "string",
+        "enum": [
+          "free",
+          "occupied"
+        ],
+        "description": "Статус слота: свободен или занят существующей встречей."
       }
     }
   }

@@ -4,6 +4,7 @@ import io.github.abai45.backend.api.EventTypesApi;
 import io.github.abai45.backend.model.EventType;
 import io.github.abai45.backend.model.EventTypeView;
 import io.github.abai45.backend.model.FieldError;
+import io.github.abai45.backend.model.Slot;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
@@ -18,9 +19,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class EventTypesController implements EventTypesApi {
 
     private final EventTypeStore store;
+    private final SlotService slotService;
 
-    public EventTypesController(EventTypeStore store) {
+    public EventTypesController(EventTypeStore store, SlotService slotService) {
         this.store = store;
+        this.slotService = slotService;
     }
 
     @Override
@@ -44,5 +47,12 @@ public class EventTypesController implements EventTypesApi {
         store.add(view);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(view);
+    }
+
+    @Override
+    public ResponseEntity<List<Slot>> listSlots(String eventTypeId) {
+        EventTypeView eventType =
+                store.findById(eventTypeId).orElseThrow(() -> new NotFoundException("Тип встречи не найден."));
+        return ResponseEntity.ok(slotService.slotsFor(eventType));
     }
 }

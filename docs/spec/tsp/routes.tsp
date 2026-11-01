@@ -25,4 +25,17 @@ interface EventTypes {
     @body
     body: EventTypeView;
   } | ValidationErrorResponse;
+
+  /**
+   * Слоты записи типа встречи: окно 14 календарных дней со следующего дня,
+   * рабочее время 09:30–18:00 Asia/Almaty; голый массив по возрастанию времени.
+   */
+  @get
+  @route("/{eventTypeId}/slots")
+  @operationId("listSlots")
+  listSlots(
+    @path
+    @doc("Идентификатор типа встречи")
+    eventTypeId: string,
+  ): Slot[] | NotFoundResponse;
 }
