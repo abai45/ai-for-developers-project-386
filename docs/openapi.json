@@ -1,0 +1,401 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Календарь звонков API",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "event-types"
+    },
+    {
+      "name": "meetings"
+    }
+  ],
+  "paths": {
+    "/api/event-types": {
+      "get": {
+        "operationId": "listEventTypes",
+        "description": "Список типов встреч владельца в порядке ответа сервера.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventTypeView"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "event-types"
+        ]
+      },
+      "post": {
+        "operationId": "createEventType",
+        "description": "Создание типа встречи владельцем; дубли названий разрешены.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "The request has succeeded and a new resource has been created as a result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventTypeView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ответ 400 с ошибками по полям — application/problem+json.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "event-types"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventType"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/event-types/{eventTypeId}/slots": {
+      "get": {
+        "operationId": "listSlots",
+        "description": "Слоты записи типа встречи: окно 14 календарных дней со следующего дня,\nрабочее время 09:30–18:00 Asia/Almaty; голый массив по возрастанию времени.",
+        "parameters": [
+          {
+            "name": "eventTypeId",
+            "in": "path",
+            "required": true,
+            "description": "Идентификатор типа встречи",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Slot"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ответ 404 — запрошенный объект не найден.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "event-types"
+        ]
+      }
+    },
+    "/api/meetings": {
+      "post": {
+        "operationId": "createMeeting",
+        "description": "Запись гостя на слот. Проверка пересечений атомарна: пересечение\nс существующей встречей (в том числе другого типа) даёт 409;\nкасание интервалов разрешено. Окончание встречи вычисляет сервер.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "The request has succeeded and a new resource has been created as a result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeetingView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ответ 400 с ошибками по полям — application/problem+json.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ответ 404 — запрошенный объект не найден.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ответ 409 — действие конфликтует с существующим состоянием сервера.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "meetings"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Meeting"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listMeetings",
+        "description": "Предстоящие встречи всех типов: только ещё не начавшиеся,\nпо возрастанию времени начала; голый массив.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MeetingView"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "meetings"
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "EventType": {
+        "type": "object",
+        "required": [
+          "name",
+          "durationMinutes",
+          "slotStepMinutes"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Название типа встречи, 1–100 символов."
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "Описание типа встречи, до 500 символов; отсутствие означает пусто."
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1,
+            "maximum": 510,
+            "description": "Длительность встречи в минутах, от 1 до 510."
+          },
+          "slotStepMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1,
+            "description": "Шаг слотов в минутах, от 1; сервер дополнительно проверяет,\nчто шаг не превышает длительность."
+          }
+        },
+        "description": "Тип встречи: шаблон будущей встречи, который создаёт владелец."
+      },
+      "EventTypeView": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Идентификатор типа встречи, устанавливается сервером."
+          }
+        },
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/EventType"
+          }
+        ],
+        "description": "Тип встречи в ответах сервера: то же, что EventType, плюс серверный идентификатор."
+      },
+      "FieldError": {
+        "type": "object",
+        "required": [
+          "field",
+          "message"
+        ],
+        "properties": {
+          "field": {
+            "type": "string",
+            "description": "Имя поля, не прошедшего проверку: name, description, durationMinutes или slotStepMinutes."
+          },
+          "message": {
+            "type": "string",
+            "description": "Понятное описание ошибки на русском — показывается прямо у поля."
+          }
+        },
+        "description": "Ошибка валидации одного поля."
+      },
+      "Meeting": {
+        "type": "object",
+        "required": [
+          "eventTypeId",
+          "guestName",
+          "start"
+        ],
+        "properties": {
+          "eventTypeId": {
+            "type": "string",
+            "description": "Идентификатор типа встречи, на который записывается гость."
+          },
+          "guestName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Имя гостя, 1–100 символов."
+          },
+          "start": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Начало встречи — старт выбранного слота (время владельца)."
+          }
+        },
+        "description": "Встреча, создаваемая гостем: тип, имя гостя и начало."
+      },
+      "MeetingView": {
+        "type": "object",
+        "required": [
+          "end"
+        ],
+        "properties": {
+          "end": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Окончание встречи = начало + длительность типа; вычисляет сервер."
+          }
+        },
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Meeting"
+          }
+        ],
+        "description": "Встреча в ответах сервера: то же, что Meeting, плюс окончание, вычисленное сервером."
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "required": [
+          "type",
+          "title",
+          "status",
+          "detail"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Тип проблемы; для этого сервиса — \"about:blank\"."
+          },
+          "title": {
+            "type": "string",
+            "description": "Краткий заголовок ошибки по-русски."
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "description": "HTTP-код ошибки."
+          },
+          "detail": {
+            "type": "string",
+            "description": "Человеческое описание проблемы на русском."
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldError"
+            },
+            "description": "Ошибки по полям — только для ответов 400."
+          }
+        },
+        "description": "Описание ошибки по RFC 9457 (application/problem+json) — единая модель\nдля всех ошибок сервиса."
+      },
+      "Slot": {
+        "type": "object",
+        "required": [
+          "start",
+          "end",
+          "status"
+        ],
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Начало слота — время владельца (Asia/Almaty) со смещением."
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Окончание слота = начало + длительность типа."
+          },
+          "status": {
+            "$ref": "#/components/schemas/SlotStatus",
+            "description": "Статус слота: свободен или занят."
+          }
+        },
+        "description": "Слот записи: интервал от начала до конца встречи."
+      },
+      "SlotStatus": {
+        "type": "string",
+        "enum": [
+          "free",
+          "occupied"
+        ],
+        "description": "Статус слота: свободен или занят существующей встречей."
+      }
+    }
+  }
+}

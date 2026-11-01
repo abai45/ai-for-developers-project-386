@@ -13,15 +13,37 @@ description = "Установить зависимости проекта"
 run = [
   "cd backend && ./mvnw -B -q dependency:go-offline",
   "cd frontend && npm install",
+  "cd docs/spec/tsp && npm install",
+  "cd e2e && npm install && npx playwright install chromium",
 ]
 
-[tasks.check]
-description = "Все проверки: тесты, линт, типы, сборка (то же выполняет CI)"
+[tasks.spec]
+description = "Сгенерировать контракт: TypeSpec → OpenAPI → TS-типы (порядок фиксирован)"
 run = [
+  "cd docs/spec/tsp && npm run generate",
+  "cd docs/spec/tsp && npm run generate:types",
+]
+
+[tasks.spec-check]
+description = "Дрейф-чек: перегенерация и сверка закоммиченных OpenAPI и TS-типов"
+run = [
+  "mise run spec",
+  "test -z \"$(git status --porcelain -- docs/openapi.json frontend/src/lib/api/schema.d.ts)\"",
+]
+
+[tasks.e2e]
+description = "Браузерные E2E-сценарии (Playwright) против настоящего сервера"
+run = "cd e2e && npm run test"
+
+[tasks.check]
+description = "Все проверки: дрейф-чек контракта, тесты, линт, типы, сборка, браузерный E2E (то же выполняет CI)"
+run = [
+  "mise run spec-check",
   "cd backend && ./mvnw -B verify",
   "cd frontend && npm run lint",
   "cd frontend && npm run test",
   "cd frontend && npm run build",
+  "mise run e2e",
 ]
 
 [tasks.backend-test]

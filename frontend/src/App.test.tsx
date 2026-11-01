@@ -44,8 +44,8 @@ describe('главный экран', () => {
     renderAt('/')
     fireEvent.click(screen.getByRole('link', { name: 'Владелец' }))
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Создать встречу' }),
+      screen.getByRole('heading', { level: 1, name: 'Владелец' }),
     ).toBeInTheDocument()
-    expect(screen.getByText('Раздел в разработке')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: 'Типы встреч' })).toBeInTheDocument()
   })
 })
