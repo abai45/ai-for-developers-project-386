@@ -45,8 +45,8 @@ test('гость проходит мастер целиком: тип → кал
     .filter({ hasText: typeName })
     .click()
 
-  const dayKey = await pickFirstDay(page)
-  await pickFirstFreeSlot(page)
+  await pickFirstDay(page)
+  const start = await pickFirstFreeSlot(page)
 
   await expect(page.getByRole('button', { name: 'Продолжить' })).toBeEnabled()
   await page.getByRole('button', { name: 'Продолжить' }).click()
@@ -64,8 +64,8 @@ test('гость проходит мастер целиком: тип → кал
     page.getByRole('heading', { level: 1, name: 'Вы записаны' }),
   ).toBeVisible()
   await expect(page.getByText(`Гость: ${guest}`)).toBeVisible()
-  // Время показывается в поясе владельца диапазоном «09:30–10:00».
-  await expect(page.getByText(/09:30–10:00|10:0\d–10:3\d/).first()).toBeVisible()
+  // Время показывается в поясе владельца диапазоном по выбранному слоту.
+  await expect(page.getByText(`${start}–`).first()).toBeVisible()
 
   // Владелец видит эту встречу в списке предстоящих.
   await page.goto('/owner')

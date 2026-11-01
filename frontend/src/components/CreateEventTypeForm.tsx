@@ -18,11 +18,51 @@ interface FormValues {
   slotStepMinutes: string
 }
 
+// Дефолты: 80% типов создаются именно с этими значениями (issue #16).
 const emptyForm: FormValues = {
   name: '',
   description: '',
-  durationMinutes: '',
-  slotStepMinutes: '',
+  durationMinutes: '30',
+  slotStepMinutes: '15',
+}
+
+const DURATION_CHIPS = [15, 30, 45, 60, 90] as const
+const STEP_CHIPS = [5, 10, 15, 30] as const
+
+// Рабочее время и формула слотов повторяют серверные правила (docs/decisions.md,
+// «Параметры расписания») — только для превью; источник истины остаётся сервер.
+const WORK_START_MIN = 9 * 60 + 30 // 09:30
+const WORK_END_MIN = 18 * 60 // 18:00
+
+function clock(totalMinutes: number): string {
+  const hh = String(Math.floor(totalMinutes / 60)).padStart(2, '0')
+  const mm = String(totalMinutes % 60).padStart(2, '0')
+  return `${hh}:${mm}`
+}
+
+/** Первые три слота дня и их всего; пусто, если ввод вне серверных правил. */
+function previewSlots(duration: number, step: number) {
+  if (
+    !Number.isInteger(duration) ||
+    !Number.isInteger(step) ||
+    duration < 1 ||
+    duration > 510 ||
+    step < 1 ||
+    step > duration
+  ) {
+    return null
+  }
+  const starts: number[] = []
+  for (let m = WORK_START_MIN; m + duration <= WORK_END_MIN; m += step) {
+    starts.push(m)
+  }
+  if (starts.length === 0) return null
+  return {
+    labels: starts
+      .slice(0, 3)
+      .map(m => `${clock(m)}–${clock(m + duration)}`),
+    count: starts.length,
+  }
 }
 
 export default function CreateEventTypeForm({ onCreated }: { onCreated: () => void }) {
@@ -32,6 +72,32 @@ export default function CreateEventTypeForm({ onCreated }: { onCreated: () => vo
 
   const setField = (field: keyof FormValues) => (value: string) =>
     setValues(prev => ({ ...prev, [field]: value }))
+
+  // Выбор/ввод длительности: шаг не может превышать новую длительность (issue #16).
+  const setDuration = (value: string) =>
+    setValues(prev => {
+      const duration = Number(value)
+      const step = Number(prev.slotStepMinutes)
+      const nextStep =
+        value !== '' && Number.isInteger(duration) && duration >= 1 && step > duration
+          ? String(duration)
+          : prev.slotStepMinutes
+      return {
+        ...prev,
+        durationMinutes: value,
+        slotStepMinutes: nextStep,
+      }
+    })
+
+  const pickChip =
+    (field: 'durationMinutes' | 'slotStepMinutes') => (value: number) =>
+      field === 'durationMinutes' ? setDuration(String(value)) : setField(field)(String(value))
+
+  function chipClass(isActive: boolean) {
+    return `rounded-full border px-3 py-1 text-sm ${
+      isActive ? 'border-primary bg-primary text-primary-foreground' : 'hover:bg-muted'
+    }`
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -63,6 +129,10 @@ export default function CreateEventTypeForm({ onCreated }: { onCreated: () => vo
       setPending(false)
     }
   }
+
+  const durationNum = Number(values.durationMinutes)
+  const stepNum = Number(values.slotStepMinutes)
+  const preview = previewSlots(durationNum, stepNum)
 
   return (
     <Card>
@@ -113,12 +183,29 @@ export default function CreateEventTypeForm({ onCreated }: { onCreated: () => vo
               id="event-type-duration"
               type="number"
               value={values.durationMinutes}
-              onChange={event => setField('durationMinutes')(event.target.value)}
+              onChange={event => setDuration(event.target.value)}
               required
               min={1}
               max={510}
               aria-invalid={fieldErrors.durationMinutes ? true : undefined}
             />
+            <div
+              role="group"
+              className="flex flex-wrap gap-1.5 pt-1"
+              aria-label="Быстрый выбор длительности"
+            >
+              {DURATION_CHIPS.map(minutes => (
+                <button
+                  key={minutes}
+                  type="button"
+                  aria-pressed={durationNum === minutes}
+                  className={chipClass(durationNum === minutes)}
+                  onClick={() => pickChip('durationMinutes')(minutes)}
+                >
+                  {minutes} мин
+                </button>
+              ))}
+            </div>
             {fieldErrors.durationMinutes && (
               <p role="alert" className="text-destructive text-sm">
                 {fieldErrors.durationMinutes}
@@ -138,12 +225,42 @@ export default function CreateEventTypeForm({ onCreated }: { onCreated: () => vo
               max={values.durationMinutes ? Number(values.durationMinutes) : undefined}
               aria-invalid={fieldErrors.slotStepMinutes ? true : undefined}
             />
+            <div
+              role="group"
+              className="flex flex-wrap gap-1.5 pt-1"
+              aria-label="Быстрый выбор шага слота"
+            >
+              {STEP_CHIPS.map(minutes => {
+                const tooBig = Number.isInteger(durationNum) && durationNum >= 1 && minutes > durationNum
+                return (
+                  <button
+                    key={minutes}
+                    type="button"
+                    disabled={tooBig}
+                    aria-pressed={stepNum === minutes}
+                    className={`${chipClass(stepNum === minutes)}${tooBig ? ' opacity-40' : ''}`}
+                    onClick={() => pickChip('slotStepMinutes')(minutes)}
+                  >
+                    {minutes} мин
+                  </button>
+                )
+              })}
+            </div>
             {fieldErrors.slotStepMinutes && (
               <p role="alert" className="text-destructive text-sm">
                 {fieldErrors.slotStepMinutes}
               </p>
             )}
           </div>
+
+          {preview && (
+            <p className="text-muted-foreground text-sm" aria-live="polite">
+              Первые слоты в рабочий день (09:30–18:00, время владельца):{' '}
+              {preview.labels.join(' · ')}
+              {preview.count > preview.labels.length ? ' …' : ''} — {preview.count} слот(ов) в
+              дне.
+            </p>
+          )}
 
           <Button type="submit" disabled={pending}>
             {pending ? 'Создаю…' : 'Создать тип встречи'}
