@@ -8,6 +8,7 @@
 - `backend/` — Spring Boot 4.1, Java 21, Maven; дымовой эндпоинт `GET /api/health`
 - `frontend/` — React 19 + Vite + TypeScript + Tailwind CSS 4 + shadcn/ui; проксирует `/api` на бекенд
 - `docs/decisions.md` — архитектурные решения: параметры расписания, модель данных, эндпоинты, стек
+- `docs/adr/` — ключевые решения в формате ADR (статус, контекст, решение, последствия, ссылка на decisions.md)
 - Контрактная цепочка: TypeSpec-исходники `docs/spec/tsp/` → `mise run spec` → сгенерированные `docs/openapi.json` и `frontend/src/lib/api/schema.d.ts` (Java-артефакты openapi-generator — в `backend/target/`, не коммитятся)
 - Хранилище — in-memory (в памяти процесса; PostgreSQL запланирован отдельным шагом)
 
