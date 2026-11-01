@@ -39,3 +39,23 @@ interface EventTypes {
     eventTypeId: string,
   ): Slot[] | NotFoundResponse;
 }
+
+/** Встречи: запись гостей и список бронирований. */
+@tag("meetings")
+@route("/api/meetings")
+interface Meetings {
+  /**
+   * Запись гостя на слот. Проверка пересечений атомарна: пересечение
+   * с существующей встречей (в том числе другого типа) даёт 409;
+   * касание интервалов разрешено. Окончание встречи вычисляет сервер.
+   */
+  @post
+  @operationId("createMeeting")
+  createMeeting(@body meeting: Meeting): {
+    @statusCode
+    statusCode: 201;
+
+    @body
+    body: MeetingView;
+  } | ValidationErrorResponse | NotFoundResponse | ConflictResponse;
+}

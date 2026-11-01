@@ -57,3 +57,15 @@ model NotFoundResponse {
   @body
   body: ProblemDetails;
 }
+
+/** Ответ 409 — действие конфликтует с существующим состоянием сервера. */
+model ConflictResponse {
+  @statusCode
+  statusCode: 409;
+
+  @header("Content-Type")
+  contentType: "application/problem+json";
+
+  @body
+  body: ProblemDetails;
+}

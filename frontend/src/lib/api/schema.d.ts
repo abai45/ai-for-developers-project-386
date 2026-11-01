@@ -42,6 +42,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/meetings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Запись гостя на слот. Проверка пересечений атомарна: пересечение
+         *     с существующей встречей (в том числе другого типа) даёт 409;
+         *     касание интервалов разрешено. Окончание встречи вычисляет сервер.
+         */
+        post: operations["createMeeting"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -76,6 +97,26 @@ export interface components {
             /** @description Понятное описание ошибки на русском — показывается прямо у поля. */
             message: string;
         };
+        /** @description Встреча, создаваемая гостем: тип, имя гостя и начало. */
+        Meeting: {
+            /** @description Идентификатор типа встречи, на который записывается гость. */
+            eventTypeId: string;
+            /** @description Имя гостя, 1–100 символов. */
+            guestName: string;
+            /**
+             * Format: date-time
+             * @description Начало встречи — старт выбранного слота (время владельца).
+             */
+            start: string;
+        };
+        /** @description Встреча в ответах сервера: то же, что Meeting, плюс окончание, вычисленное сервером. */
+        MeetingView: {
+            /**
+             * Format: date-time
+             * @description Окончание встречи = начало + длительность типа; вычисляет сервер.
+             */
+            end: string;
+        } & components["schemas"]["Meeting"];
         /**
          * @description Описание ошибки по RFC 9457 (application/problem+json) — единая модель
          *     для всех ошибок сервиса.
@@ -200,6 +241,57 @@ export interface operations {
             };
             /** @description Ответ 404 — запрошенный объект не найден. */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    createMeeting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Meeting"];
+            };
+        };
+        responses: {
+            /** @description The request has succeeded and a new resource has been created as a result. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingView"];
+                };
+            };
+            /** @description Ответ 400 с ошибками по полям — application/problem+json. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Ответ 404 — запрошенный объект не найден. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Ответ 409 — действие конфликтует с существующим состоянием сервера. */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
