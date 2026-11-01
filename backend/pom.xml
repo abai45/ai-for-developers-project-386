@@ -104,7 +104,6 @@
 								<openApiNullable>false</openApiNullable>
 								<dateLibrary>java8</dateLibrary>
 								<useSpringBoot3>true</useSpringBoot3>
-								<useSwaggerAnnotations>false</useSwaggerAnnotations>
 							</configOptions>
 						</configuration>
 					</execution>

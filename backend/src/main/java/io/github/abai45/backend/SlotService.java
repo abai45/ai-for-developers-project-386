@@ -25,7 +25,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class SlotService {
 
-    private static final ZoneId OWNER_ZONE = ZoneId.of("Asia/Almaty");
+    static final ZoneId OWNER_ZONE = ZoneId.of("Asia/Almaty");
     private static final LocalTime WORK_START = LocalTime.of(9, 30);
     private static final LocalTime WORK_END = LocalTime.of(18, 0);
     private static final int WINDOW_DAYS = 14;

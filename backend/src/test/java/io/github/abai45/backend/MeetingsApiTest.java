@@ -9,7 +9,9 @@ import io.github.abai45.backend.model.MeetingView;
 import io.github.abai45.backend.model.Slot;
 import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -156,6 +158,52 @@ class MeetingsApiTest {
         } finally {
             pool.shutdown();
         }
+    }
+
+    @Test
+    void startOutsideBookingWindowIsRejectedWith400() {
+        EventTypeView type = createType("Окно записи", 30, 15);
+
+        // Время «вчера» — вне окна записи: сервер — источник истины правил расписания.
+        OffsetDateTime past = java.time.LocalDate.now(ZoneId.of("Asia/Almaty"))
+                .minusDays(1)
+                .atTime(10, 0)
+                .atZone(ZoneId.of("Asia/Almaty"))
+                .toOffsetDateTime();
+
+        ResponseEntity<String> response = postMeeting(type.getId(), "Вчерашний", past);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).contains("\"field\":\"start\"");
+    }
+
+    @Test
+    void startNotAlignedToSlotGridIsRejectedWith400() {
+        EventTypeView type = createType("Сетка слотов", 30, 15);
+
+        // 09:37 не является стартом слота шага 15 — записаться нельзя.
+        OffsetDateTime offGrid = java.time.LocalDate.now(ZoneId.of("Asia/Almaty"))
+                .plusDays(1)
+                .atTime(9, 37)
+                .atZone(ZoneId.of("Asia/Almaty"))
+                .toOffsetDateTime();
+
+        ResponseEntity<String> response = postMeeting(type.getId(), "Неточный", offGrid);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).contains("\"field\":\"start\"");
+    }
+
+    @Test
+    void missingEventTypeIdAndStartReturn400NotServerError() {
+        Map<String, Object> body = new java.util.HashMap<>();
+        body.put("guestName", "Без деталей");
+
+        ResponseEntity<String> response =
+                restTemplate.exchange("/api/meetings", HttpMethod.POST, json(body), String.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(contentTypeIsProblem(response)).isTrue();
+        assertThat(response.getBody()).contains("\"field\":\"eventTypeId\"");
+        assertThat(response.getBody()).contains("\"field\":\"start\"");
     }
 
     private EventTypeView createType(String name, int duration, int step) {

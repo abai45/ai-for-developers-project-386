@@ -23,8 +23,9 @@ public class MeetingStore {
     public boolean addIfNoOverlap(MeetingView meeting) {
         synchronized (meetings) {
             boolean overlaps = meetings.stream()
-                    .anyMatch(existing -> existing.getStart().isBefore(meeting.getEnd())
-                            && meeting.getStart().isBefore(existing.getEnd()));
+                    .anyMatch(existing -> IntervalOverlap.overlaps(
+                            existing.getStart(), existing.getEnd(),
+                            meeting.getStart(), meeting.getEnd()));
             if (overlaps) {
                 return false;
             }

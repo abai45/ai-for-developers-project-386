@@ -71,14 +71,14 @@ class MeetingsListApiTest {
     void pastMeetingsAreExcludedFromUpcomingList() {
         EventTypeView type = createType("Прошлая встреча 30", 30, 15);
 
-        // Встреча в прошлом (вне окна записи) — сервер принимает POST, но в
-        // предстоящие она попасть не должна.
+        // Сервер — источник истины окна записи: вчерашнее время не является
+        // слотом из окна и отклоняется 400 по полю start; в список попадает только будущее.
         OffsetDateTime past = OffsetDateTime.now(ALMATY)
                 .minusDays(1)
                 .withHour(10)
                 .withMinute(0)
                 .withSecond(0);
-        assertThat(book(type.getId(), "Из прошлого", past).getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(book(type.getId(), "Из прошлого", past).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
 
         List<MeetingView> meetings = listMeetings();
         assertThat(meetings)
