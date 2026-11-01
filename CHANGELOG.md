@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0](https://github.com/abai45/ai-for-developers-project-386/compare/v1.0.0...v1.1.0) (2026-11-01)
+
+
+### Features
+
+* Docker + подготовка деплоя через Render MCP ([2fc18c1](https://github.com/abai45/ai-for-developers-project-386/commit/2fc18c1e61df345745bb55ec33ce2529029c37ab))
+* Docker-образ — статика фронтенда в джаре, запуск по PORT ([#19](https://github.com/abai45/ai-for-developers-project-386/issues/19)) ([3926c02](https://github.com/abai45/ai-for-developers-project-386/commit/3926c02e9ba7c112d4d74dfd28ae7cfe8d668754))
+
 ## 1.0.0 (2026-11-01)
 
 
