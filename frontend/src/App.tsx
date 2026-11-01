@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import Footer from '@/components/Footer'
 import Header from '@/components/Header'
 import LandingPage from '@/pages/LandingPage'
+import OwnerPage from '@/pages/OwnerPage'
 import StubPage from '@/pages/StubPage'
 
 function App() {
@@ -15,7 +16,7 @@ function App() {
             path="/book"
             element={<StubPage title="Присоединиться ко встрече" />}
           />
-          <Route path="/owner" element={<StubPage title="Создать встречу" />} />
+          <Route path="/owner" element={<OwnerPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
