@@ -32,4 +32,9 @@ public class MeetingStore {
             return true;
         }
     }
+
+    /** Копия всех встреч — для расчёта занятости слотов. */
+    public List<MeetingView> snapshot() {
+        return List.copyOf(meetings);
+    }
 }

@@ -27,6 +27,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.annotation.DirtiesContext;
 
 /**
  * API-тест записи гостя (шов HTTP): 201 и тело встречи с серверным end,
@@ -36,6 +37,9 @@ import org.springframework.http.ResponseEntity;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureTestRestTemplate
+// Встречи этого класса не должны протекать в контекст других тестовых классов
+// ( SlotsApiTest проверяет, что без записей все слоты свободны).
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class MeetingsApiTest {
 
     @Autowired
