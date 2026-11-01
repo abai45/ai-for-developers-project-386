@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -36,6 +37,9 @@ import org.springframework.http.ResponseEntity;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureTestRestTemplate
+// Встречи этого класса не должны протекать в контекст других тестовых классов
+// (SlotsApiTest проверяет, что без записей все слоты свободны).
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class MeetingsApiTest {
 
     @Autowired
