@@ -94,6 +94,17 @@
   - Java: openapi-generator-maven-plugin на `generate-sources`, конфиг `backend/openapi-generator.yml` (generator `spring`, `interfaceOnly=true`, `useTags=true`, `dateLibrary=java8`, Jackson); `basePackage: io.github.abai45.backend` → интерфейсы контроллеров в `...backend.api`, DTO в `...backend.model`; сгенерированный код не коммитится
   - TS: openapi-typescript из `docs/openapi.json` → `frontend/src/lib/api/schema.d.ts`; openapi-fetch-обёртка пишется руками (`frontend/src/lib/api/client.ts`)
 
+## Контрактная цепочка: генерация и дрейф-чек (тикет 1, #7)
+
+- **Одна повторяемая задача генерации** — `mise run spec`: сначала `cd docs/spec/tsp && npm run generate` (`tsp compile .` по `tspconfig.yaml` пишет `docs/openapi.json`), затем `cd docs/spec/tsp && npm run generate:types` (`openapi-typescript ../openapi.json -o ../../frontend/src/lib/api/schema.d.ts`); порядок фиксирован — OpenAPI из TypeSpec, затем TS-типы из OpenAPI
+- **Инструменты генерации** — пины живут в `docs/spec/tsp/package.json` (devDependencies `@typespec/compiler`, `@typespec/openapi3`, `openapi-typescript` одинаковой версии) вместе с lockfile; `npm install` в этой папке выполняет `mise run setup` — сборка в чистом состоянии работает без глобальных установок
+- **Дрейф-чек** — `mise run spec-check`: прогоняет `mise run spec` и сверяет рабочее дерево командой `git status --porcelain -- docs/openapi.json frontend/src/lib/api/schema.d.ts` (ловит и изменённые, и новые незакоммиченные артефакты); входит в `mise run check` первым шагом — проверки только добавляются, не ослабляются
+- **Коммитится** — `docs/spec/tsp/**` (включая `package-lock.json`), `docs/openapi.json`, `frontend/src/lib/api/schema.d.ts`. **Не коммитится** — сгенерированный Java-код (каталог `backend/target/` в `.gitignore`), `node_modules`
+- **Серверная генерация** — `openapi-generator-maven-plugin` 7.26.0 на фазе `generate-sources`, конфиг `backend/openapi-generator.yml`: generator `spring`, `interfaceOnly=true`, `useTags=true`, `useJakartaEe=true` (Spring Boot 4 → jakarta), `useBeanValidation=true`, `openApiNullable=false` (плоский Jackson), `dateLibrary=java8` (`offsetDateTime` → `OffsetDateTime`); интерфейсы контроллеров — `io.github.abai45.backend.api`, DTO — `io.github.abai45.backend.model`; логика пишется вручную в корневом пакете `io.github.abai45.backend`
+- **Граница контракта по тикетам** — контракт растёт вместе с тикетами: тикет 1 (#7) добавляет модели `EventType`/`EventTypeView` и операцию `listEventTypes`; `errors.tsp` (RFC 9457 `ProblemDetails`) и остальные операции появятся со своими тикетами (#8 — `createEventType` и ответы `400`, #10 — `listSlots`, #11 — `createMeeting`, #13 — `listMeetings`), `healthCheck` впишется в контракт отдельным шагом
+- **Модели списка типов** — `EventType` — тело создания (без `id`), `EventTypeView extends EventType` — ответ сервера с обязательным `id`; `GET /api/event-types` отвечает голым массивом `EventTypeView[]`; кросс-проверка `slotStepMinutes ≤ durationMinutes` — серверная, контракт фиксирует только `slotStepMinutes ≥ 1`
+- **Клиент** — рукописная обёртка `frontend/src/lib/api/client.ts` поверх `openapi-fetch` с типом `paths` из `schema.d.ts`; страницы и компоненты не вызывают `fetch` напрямую
+
 ## Экран владельца `/owner` (вопрос карты #3, 31.10.2026)
 
 - **Страница** — один `h1` «Владелец» + рядом ссылка «На главную» → `/`; секции с `h2`: «Создать тип встречи», «Типы встреч», «Предстоящие встречи»

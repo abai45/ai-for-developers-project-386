@@ -1,0 +1,96 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Календарь звонков API",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "event-types"
+    }
+  ],
+  "paths": {
+    "/api/event-types": {
+      "get": {
+        "operationId": "listEventTypes",
+        "description": "Список типов встреч владельца в порядке ответа сервера.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventTypeView"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "event-types"
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "EventType": {
+        "type": "object",
+        "required": [
+          "name",
+          "durationMinutes",
+          "slotStepMinutes"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Название типа встречи, 1–100 символов."
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "Описание типа встречи, до 500 символов; отсутствие означает пусто."
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1,
+            "maximum": 510,
+            "description": "Длительность встречи в минутах, от 1 до 510."
+          },
+          "slotStepMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1,
+            "description": "Шаг слотов в минутах, от 1; сервер дополнительно проверяет,\nчто шаг не превышает длительность."
+          }
+        },
+        "description": "Тип встречи: шаблон будущей встречи, который создаёт владелец."
+      },
+      "EventTypeView": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Идентификатор типа встречи, устанавливается сервером."
+          }
+        },
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/EventType"
+          }
+        ],
+        "description": "Тип встречи в ответах сервера: то же, что EventType, плюс серверный идентификатор."
+      }
+    }
+  }
+}
