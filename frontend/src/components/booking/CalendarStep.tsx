@@ -126,6 +126,54 @@ export default function CalendarStep({
       </Card>
     )
   }
+  if (loading) {
+    // Скелетон всего шага: окно и месяцы известны только из ответа сервера.
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 md:grid md:grid-cols-3 md:items-start">
+          <BookingInfoCard
+            eventType={eventType}
+            day={selectedDay ?? undefined}
+            slot={selectedSlot}
+          />
+          <Card>
+            <CardHeader>
+              <h2 className="font-heading text-base leading-snug font-medium">Календарь</h2>
+            </CardHeader>
+            <CardContent>
+              <p className="sr-only" aria-live="polite">
+                Загрузка…
+              </p>
+              <div className="grid grid-cols-7 gap-1">
+                {Array.from({ length: 21 }, (_, i) => (
+                  <Skeleton key={i} className="h-14 rounded-lg" />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+          <Card aria-label="Слоты выбранного дня">
+            <CardHeader>
+              <h3 className="font-heading text-base leading-snug font-medium">Слоты</h3>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-2">
+                <Skeleton className="h-10 rounded-lg" />
+                <Skeleton className="h-10 rounded-lg" />
+                <Skeleton className="h-10 rounded-lg" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="flex justify-between">
+          <Button variant="outline" onClick={onBack}>
+            Назад
+          </Button>
+          <Button disabled>Продолжить</Button>
+        </div>
+      </div>
+    )
+  }
+  // state.status === 'ok' и окно непусто: months посчитаны из слотов сервера.
   const currentMonth = windowMonths[Math.min(monthIndex, windowMonths.length - 1)]
   const [year, month] = currentMonth.split('-').map(Number)
   const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate()
@@ -168,13 +216,6 @@ export default function CalendarStep({
             </div>
           </CardHeader>
           <CardContent>
-            {loading ? (
-              <div className="grid grid-cols-7 gap-1">
-                {Array.from({ length: 21 }, (_, i) => (
-                  <Skeleton key={i} className="h-14 rounded-lg" />
-                ))}
-              </div>
-            ) : (
               <>
                 <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground">
                   {WEEKDAYS.map(day => (
@@ -218,7 +259,6 @@ export default function CalendarStep({
                   })}
                 </div>
               </>
-            )}
           </CardContent>
         </Card>
 
@@ -239,16 +279,7 @@ export default function CalendarStep({
             </h3>
           </CardHeader>
           <CardContent>
-            {loading ? (
-              <div className="flex flex-col gap-2">
-                <p className="sr-only" aria-live="polite">
-                  Загрузка…
-                </p>
-                <Skeleton className="h-10 rounded-lg" />
-                <Skeleton className="h-10 rounded-lg" />
-                <Skeleton className="h-10 rounded-lg" />
-              </div>
-            ) : !selectedDay ? (
+            {!selectedDay ? (
               <p className="text-muted-foreground">Выберите день в календаре.</p>
             ) : slotsOfSelectedDay.length === 0 ? (
               <p className="text-muted-foreground">Свободных слотов на этот день нет</p>
