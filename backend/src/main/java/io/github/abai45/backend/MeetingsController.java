@@ -5,6 +5,7 @@ import io.github.abai45.backend.model.EventTypeView;
 import io.github.abai45.backend.model.FieldError;
 import io.github.abai45.backend.model.Meeting;
 import io.github.abai45.backend.model.MeetingView;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -13,23 +14,34 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Контроллер встреч: запись гостя по контракту MeetingsApi.
- * Окончание встречи вычисляет сервер (начало + длительность типа),
- * пересечение интервалов запрещено атомарно — в том числе между типами встреч.
+ * Окончание встречи вычисляет сервер (начало + длительность типа).
+ * Правила расписания выполняет сервер: начало записи — только слот из окна
+ * записи этого типа, пересечение интервалов запрещено атомарно — в том числе
+ * между разными типами встреч.
  */
 @RestController
 public class MeetingsController implements MeetingsApi {
 
     private final EventTypeStore eventTypeStore;
     private final MeetingStore meetingStore;
+    private final SlotService slotService;
 
-    public MeetingsController(EventTypeStore eventTypeStore, MeetingStore meetingStore) {
+    public MeetingsController(EventTypeStore eventTypeStore, MeetingStore meetingStore, SlotService slotService) {
         this.eventTypeStore = eventTypeStore;
         this.meetingStore = meetingStore;
+        this.slotService = slotService;
     }
 
     @Override
     public ResponseEntity<MeetingView> createMeeting(Meeting meeting) {
-        List<FieldError> errors = validateGuestName(meeting.getGuestName());
+        List<FieldError> errors = new ArrayList<>();
+        if (meeting.getEventTypeId() == null || meeting.getEventTypeId().isBlank()) {
+            errors.add(FieldErrors.of("eventTypeId", "Укажите тип встречи."));
+        }
+        if (meeting.getStart() == null) {
+            errors.add(FieldErrors.of("start", "Выберите время встречи."));
+        }
+        errors.addAll(EventTypeValidator.validateGuestName(meeting.getGuestName()));
         if (!errors.isEmpty()) {
             throw new ValidationException(errors);
         }
@@ -38,11 +50,20 @@ public class MeetingsController implements MeetingsApi {
                 .findById(meeting.getEventTypeId())
                 .orElseThrow(() -> new NotFoundException("Тип встречи не найден."));
 
+        // Сервер — источник истины расписания: запись только на слот из окна типа.
+        OffsetDateTime start = meeting.getStart();
+        boolean isSlot = slotService.slotsFor(eventType).stream()
+                .anyMatch(slot -> slot.getStart().isEqual(start));
+        if (!isSlot) {
+            throw new ValidationException(
+                    List.of(FieldErrors.of("start", "Слот недоступен — выберите время из календаря.")));
+        }
+
         MeetingView view = new MeetingView();
         view.setEventTypeId(eventType.getId());
         view.setGuestName(meeting.getGuestName());
-        view.setStart(meeting.getStart());
-        view.setEnd(meeting.getStart().plusMinutes(eventType.getDurationMinutes()));
+        view.setStart(start);
+        view.setEnd(start.plusMinutes(eventType.getDurationMinutes()));
 
         if (!meetingStore.addIfNoOverlap(view)) {
             throw new ConflictException("На выбранное время только что записали встречу. Выберите другой слот.");
@@ -53,23 +74,6 @@ public class MeetingsController implements MeetingsApi {
 
     @Override
     public ResponseEntity<List<MeetingView>> listMeetings() {
-        return ResponseEntity.ok(meetingStore.upcoming(java.time.OffsetDateTime.now()));
-    }
-
-    private static List<FieldError> validateGuestName(String guestName) {
-        List<FieldError> errors = new ArrayList<>();
-        if (guestName == null || guestName.isBlank()) {
-            errors.add(fieldError("guestName", "Имя обязательно (1–100 символов)."));
-        } else if (guestName.length() > 100) {
-            errors.add(fieldError("guestName", "Имя не длиннее 100 символов."));
-        }
-        return errors;
-    }
-
-    private static FieldError fieldError(String field, String message) {
-        FieldError error = new FieldError();
-        error.setField(field);
-        error.setMessage(message);
-        return error;
+        return ResponseEntity.ok(meetingStore.upcoming(OffsetDateTime.now(SlotService.OWNER_ZONE)));
     }
 }

@@ -25,11 +25,7 @@ const emptyForm: FormValues = {
   slotStepMinutes: '',
 }
 
-export default function CreateEventTypeForm({
-  onCreated,
-}: {
-  onCreated: (name: string) => void
-}) {
+export default function CreateEventTypeForm({ onCreated }: { onCreated: () => void }) {
   const [values, setValues] = useState<FormValues>(emptyForm)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [pending, setPending] = useState(false)
@@ -59,7 +55,7 @@ export default function CreateEventTypeForm({
       } else {
         setValues(emptyForm)
         toast.success(`Тип встречи «${result.eventType.name}» создан`)
-        onCreated(result.eventType.name)
+        onCreated()
       }
     } catch {
       toast.error('Не удалось создать тип встречи. Попробуйте ещё раз.')
@@ -76,7 +72,7 @@ export default function CreateEventTypeForm({
         </h2>
       </CardHeader>
       <CardContent>
-        <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate={false}>
+        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="event-type-name">Название</Label>
             <Input

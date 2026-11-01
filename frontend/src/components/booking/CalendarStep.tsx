@@ -12,24 +12,12 @@ import {
   formatOwnerDay,
   formatOwnerTimeRange,
   ownerDayKey,
-  ownerTodayKey,
 } from '@/lib/ownerTime'
 
 type SlotsState =
   | { status: 'loading' }
   | { status: 'error' }
   | { status: 'ok'; slots: Slot[] }
-
-/** Окно записи: 14 календарных дней со следующего дня (канон сервера). */
-function windowDayKeys(): string[] {
-  const keys: string[] = []
-  for (let offset = 1; offset <= 14; offset++) {
-    const date = new Date(`${ownerTodayKey()}T12:00:00Z`)
-    date.setUTCDate(date.getUTCDate() + offset)
-    keys.push(date.toISOString().slice(0, 10))
-  }
-  return keys
-}
 
 const WEEKDAYS = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс']
 
@@ -54,11 +42,6 @@ export default function CalendarStep({
 }) {
   const [state, setState] = useState<SlotsState>({ status: 'loading' })
   const [reloadKey, setReloadKey] = useState(0)
-  const windowKeys = useMemo(() => windowDayKeys(), [])
-  const windowMonths = useMemo(
-    () => Array.from(new Set(windowKeys.map(dayKey => dayKey.slice(0, 7)))),
-    [windowKeys],
-  )
   const [monthIndex, setMonthIndex] = useState(0)
 
   // Каждый вход на шаг перезапрашивает слоты (канон свежести слотов).
@@ -76,6 +59,14 @@ export default function CalendarStep({
       cancelled = true
     }
   }, [eventType.id, reloadKey])
+
+  // Окно записи берём из ответа сервера (сервер — источник истины расписания):
+  // уникальные дни слотов = дни окна, уникальные месяцы = границы листания.
+  const windowMonths = useMemo(() => {
+    if (state.status !== 'ok') return []
+    const months = new Set(state.slots.map(slot => ownerDayKey(slot.start).slice(0, 7)))
+    return Array.from(months).sort()
+  }, [state])
 
   const freeByDay = useMemo(() => {
     const counts = new Map<string, number>()
@@ -122,7 +113,68 @@ export default function CalendarStep({
   }
 
   const loading = state.status === 'loading'
-  const currentMonth = windowMonths[monthIndex]
+  if (!loading && windowMonths.length === 0) {
+    // Сервер всегда отдаёт слоты для дней окна; пустой ответ — аномалия.
+    return (
+      <Card role="alert">
+        <CardContent className="flex flex-col items-start gap-3 py-6">
+          <p className="text-muted-foreground">Не удалось загрузить данные</p>
+          <Button variant="outline" onClick={() => setReloadKey(key => key + 1)}>
+            Повторить
+          </Button>
+        </CardContent>
+      </Card>
+    )
+  }
+  if (loading) {
+    // Скелетон всего шага: окно и месяцы известны только из ответа сервера.
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 md:grid md:grid-cols-3 md:items-start">
+          <BookingInfoCard
+            eventType={eventType}
+            day={selectedDay ?? undefined}
+            slot={selectedSlot}
+          />
+          <Card>
+            <CardHeader>
+              <h2 className="font-heading text-base leading-snug font-medium">Календарь</h2>
+            </CardHeader>
+            <CardContent>
+              <p className="sr-only" aria-live="polite">
+                Загрузка…
+              </p>
+              <div className="grid grid-cols-7 gap-1">
+                {Array.from({ length: 21 }, (_, i) => (
+                  <Skeleton key={i} className="h-14 rounded-lg" />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+          <Card aria-label="Слоты выбранного дня">
+            <CardHeader>
+              <h3 className="font-heading text-base leading-snug font-medium">Слоты</h3>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-2">
+                <Skeleton className="h-10 rounded-lg" />
+                <Skeleton className="h-10 rounded-lg" />
+                <Skeleton className="h-10 rounded-lg" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="flex justify-between">
+          <Button variant="outline" onClick={onBack}>
+            Назад
+          </Button>
+          <Button disabled>Продолжить</Button>
+        </div>
+      </div>
+    )
+  }
+  // state.status === 'ok' и окно непусто: months посчитаны из слотов сервера.
+  const currentMonth = windowMonths[Math.min(monthIndex, windowMonths.length - 1)]
   const [year, month] = currentMonth.split('-').map(Number)
   const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate()
   // Понедельник — первый столбец: сдвиг первого дня месяца (0..6).
@@ -164,13 +216,6 @@ export default function CalendarStep({
             </div>
           </CardHeader>
           <CardContent>
-            {loading ? (
-              <div className="grid grid-cols-7 gap-1">
-                {Array.from({ length: 21 }, (_, i) => (
-                  <Skeleton key={i} className="h-14 rounded-lg" />
-                ))}
-              </div>
-            ) : (
               <>
                 <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground">
                   {WEEKDAYS.map(day => (
@@ -183,9 +228,10 @@ export default function CalendarStep({
                   ))}
                   {Array.from({ length: daysInMonth }, (_, i) => {
                     const dayKey = `${currentMonth}-${String(i + 1).padStart(2, '0')}`
-                    const inWindow = windowKeys.includes(dayKey)
+                    // Кликабелен только день окна со свободными слотами;
+                    // дни вне окна отсутствуют в ответе сервера → free = 0.
                     const free = freeByDay.get(dayKey) ?? 0
-                    const clickable = inWindow && free > 0
+                    const clickable = free > 0
                     const isSelected = selectedDay === dayKey
                     return (
                       <button
@@ -213,7 +259,6 @@ export default function CalendarStep({
                   })}
                 </div>
               </>
-            )}
           </CardContent>
         </Card>
 
@@ -234,16 +279,7 @@ export default function CalendarStep({
             </h3>
           </CardHeader>
           <CardContent>
-            {loading ? (
-              <div className="flex flex-col gap-2">
-                <p className="sr-only" aria-live="polite">
-                  Загрузка…
-                </p>
-                <Skeleton className="h-10 rounded-lg" />
-                <Skeleton className="h-10 rounded-lg" />
-                <Skeleton className="h-10 rounded-lg" />
-              </div>
-            ) : !selectedDay ? (
+            {!selectedDay ? (
               <p className="text-muted-foreground">Выберите день в календаре.</p>
             ) : slotsOfSelectedDay.length === 0 ? (
               <p className="text-muted-foreground">Свободных слотов на этот день нет</p>

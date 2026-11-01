@@ -48,8 +48,3 @@ export function formatOwnerDateTimeRange(startIso: string, endIso: string): stri
   }).format(date)
   return `${day}, ${formatOwnerTimeRange(startIso, endIso)}`
 }
-
-/** Сегодняшний день в поясе владельца (yyyy-mm-dd). */
-export function ownerTodayKey(): string {
-  return ownerDayKey(new Date().toISOString())
-}
