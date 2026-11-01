@@ -37,6 +37,7 @@ export default function CalendarStep({
   eventType,
   selectedDay,
   selectedSlot,
+  conflictMessage,
   onPickDay,
   onPickSlot,
   onBack,
@@ -45,6 +46,7 @@ export default function CalendarStep({
   eventType: EventTypeView
   selectedDay: string | null
   selectedSlot: Slot | null
+  conflictMessage?: string | null
   onPickDay: (day: string) => void
   onPickSlot: (slot: Slot) => void
   onBack: () => void
@@ -215,6 +217,14 @@ export default function CalendarStep({
         </Card>
 
         <Card aria-label="Слоты выбранного дня">
+          {conflictMessage && (
+            <p
+              role="alert"
+              className="text-destructive rounded-t-xl border-b bg-destructive/5 px-4 py-2 text-sm"
+            >
+              {conflictMessage}
+            </p>
+          )}
           <CardHeader>
             <h3 className="font-heading text-base leading-snug font-medium">
               {selectedDay

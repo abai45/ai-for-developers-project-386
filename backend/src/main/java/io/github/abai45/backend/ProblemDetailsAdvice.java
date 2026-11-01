@@ -38,4 +38,16 @@ public class ProblemDetailsAdvice {
                 .contentType(MediaType.APPLICATION_PROBLEM_JSON)
                 .body(problem);
     }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ProblemDetails> conflict(ConflictException exception) {
+        ProblemDetails problem = new ProblemDetails();
+        problem.setType("about:blank");
+        problem.setTitle("Время занято");
+        problem.setStatus(HttpStatus.CONFLICT.value());
+        problem.setDetail(exception.detail());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .body(problem);
+    }
 }

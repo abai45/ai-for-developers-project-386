@@ -3,6 +3,7 @@ import Footer from '@/components/Footer'
 import Header from '@/components/Header'
 import { Toaster } from '@/components/ui/sonner'
 import BookingPage from '@/pages/BookingPage'
+import BookingSuccessPage from '@/pages/BookingSuccessPage'
 import LandingPage from '@/pages/LandingPage'
 import OwnerPage from '@/pages/OwnerPage'
 
@@ -14,6 +15,7 @@ function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/book" element={<BookingPage />} />
+          <Route path="/book/success" element={<BookingSuccessPage />} />
           <Route path="/owner" element={<OwnerPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
