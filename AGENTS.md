@@ -20,7 +20,7 @@
 - `mise run backend` — бекенд на :8080
 - `mise run frontend` — фронтенд на :5173
 - `mise run backend-test` / `mise run frontend-test` — тесты по частям
-- `mise start` / `mise stop` — бекенд и фронтенд фоном (daemons)
+- `mise daemons start` / `mise daemons stop` — бекенд и фронтенд фоном (pitchfork-демоны из `[daemons]`); `mise daemons status` / `logs` — состояние и логи
 
 ## Правила
 
