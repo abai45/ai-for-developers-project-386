@@ -1,6 +1,7 @@
-package io.github.abai45.backend;
+package io.github.abai45.backend.controller;
 
 import io.github.abai45.backend.model.ProblemDetails;
+import io.github.abai45.backend.validation.ValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

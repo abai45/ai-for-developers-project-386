@@ -1,13 +1,13 @@
-package io.github.abai45.backend;
+package io.github.abai45.backend.validation;
 
 import io.github.abai45.backend.model.FieldError;
 
 /** Фабрика ошибок валидации по полям для ответов 400 problem+json. */
-final class FieldErrors {
+public final class FieldErrors {
 
     private FieldErrors() {}
 
-    static FieldError of(String field, String message) {
+    public static FieldError of(String field, String message) {
         FieldError error = new FieldError();
         error.setField(field);
         error.setMessage(message);

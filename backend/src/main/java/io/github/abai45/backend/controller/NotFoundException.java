@@ -1,18 +1,18 @@
-package io.github.abai45.backend;
+package io.github.abai45.backend.controller;
 
 /**
  * Запрошенный объект (тип встречи, встреча) не найден — ответ 404
  * problem+json формирует ProblemDetailsAdvice.
  */
-class NotFoundException extends RuntimeException {
+public class NotFoundException extends RuntimeException {
 
     private final String detail;
 
-    NotFoundException(String detail) {
+    public NotFoundException(String detail) {
         this.detail = detail;
     }
 
-    String detail() {
+    public String detail() {
         return detail;
     }
 }

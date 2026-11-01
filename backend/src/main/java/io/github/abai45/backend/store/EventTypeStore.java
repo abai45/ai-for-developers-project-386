@@ -1,4 +1,4 @@
-package io.github.abai45.backend;
+package io.github.abai45.backend.store;
 
 import io.github.abai45.backend.model.EventTypeView;
 import java.util.List;

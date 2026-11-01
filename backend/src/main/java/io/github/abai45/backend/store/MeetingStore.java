@@ -1,6 +1,7 @@
-package io.github.abai45.backend;
+package io.github.abai45.backend.store;
 
 import io.github.abai45.backend.model.MeetingView;
+import io.github.abai45.backend.validation.IntervalOverlap;
 import java.util.List;
 import org.springframework.stereotype.Component;
 

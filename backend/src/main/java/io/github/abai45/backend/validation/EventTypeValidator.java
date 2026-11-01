@@ -1,4 +1,4 @@
-package io.github.abai45.backend;
+package io.github.abai45.backend.validation;
 
 import io.github.abai45.backend.model.EventType;
 import io.github.abai45.backend.model.FieldError;
@@ -10,11 +10,11 @@ import java.util.List;
  * Собирает все ошибки полей за один проход; сообщения на русском показываются
  * прямо у поля в форме владельца.
  */
-final class EventTypeValidator {
+public final class EventTypeValidator {
 
     private EventTypeValidator() {}
 
-    static List<FieldError> validate(EventType eventType) {
+    public static List<FieldError> validate(EventType eventType) {
         List<FieldError> errors = new ArrayList<>();
 
         String name = eventType.getName();
@@ -49,7 +49,7 @@ final class EventTypeValidator {
     }
 
     /** Имя гостя обязательно и не длиннее 100 символов (встреча, тикет #11). */
-    static List<FieldError> validateGuestName(String guestName) {
+    public static List<FieldError> validateGuestName(String guestName) {
         List<FieldError> errors = new ArrayList<>();
         if (guestName == null || guestName.isBlank()) {
             errors.add(FieldErrors.of("guestName", "Имя обязательно (1–100 символов)."));

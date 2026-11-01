@@ -1,10 +1,16 @@
-package io.github.abai45.backend;
+package io.github.abai45.backend.controller;
 
 import io.github.abai45.backend.api.MeetingsApi;
 import io.github.abai45.backend.model.EventTypeView;
 import io.github.abai45.backend.model.FieldError;
 import io.github.abai45.backend.model.Meeting;
 import io.github.abai45.backend.model.MeetingView;
+import io.github.abai45.backend.service.SlotService;
+import io.github.abai45.backend.store.EventTypeStore;
+import io.github.abai45.backend.store.MeetingStore;
+import io.github.abai45.backend.validation.EventTypeValidator;
+import io.github.abai45.backend.validation.FieldErrors;
+import io.github.abai45.backend.validation.ValidationException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;

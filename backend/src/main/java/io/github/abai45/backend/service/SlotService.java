@@ -1,9 +1,10 @@
-package io.github.abai45.backend;
+package io.github.abai45.backend.service;
 
 import io.github.abai45.backend.model.EventTypeView;
 import io.github.abai45.backend.model.MeetingView;
 import io.github.abai45.backend.model.Slot;
 import io.github.abai45.backend.model.SlotStatus;
+import io.github.abai45.backend.store.MeetingStore;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -25,7 +26,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class SlotService {
 
-    static final ZoneId OWNER_ZONE = ZoneId.of("Asia/Almaty");
+    public static final ZoneId OWNER_ZONE = ZoneId.of("Asia/Almaty");
     private static final LocalTime WORK_START = LocalTime.of(9, 30);
     private static final LocalTime WORK_END = LocalTime.of(18, 0);
     private static final int WINDOW_DAYS = 14;

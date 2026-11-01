@@ -1,4 +1,4 @@
-package io.github.abai45.backend;
+package io.github.abai45.backend.controller;
 
 import java.util.Map;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -1,4 +1,4 @@
-package io.github.abai45.backend;
+package io.github.abai45.backend.validation;
 
 import java.time.OffsetDateTime;
 
@@ -6,11 +6,12 @@ import java.time.OffsetDateTime;
  * Правило пересечения интервалов — единое для занятости слотов и конфликта
  * записи: строгое наложение запрещено, касание (окончание = начало) разрешено.
  */
-final class IntervalOverlap {
+public final class IntervalOverlap {
 
     private IntervalOverlap() {}
 
-    static boolean overlaps(OffsetDateTime aStart, OffsetDateTime aEnd, OffsetDateTime bStart, OffsetDateTime bEnd) {
+    public static boolean overlaps(
+            OffsetDateTime aStart, OffsetDateTime aEnd, OffsetDateTime bStart, OffsetDateTime bEnd) {
         return bStart.isBefore(aEnd) && aStart.isBefore(bEnd);
     }
 }

@@ -1,10 +1,14 @@
-package io.github.abai45.backend;
+package io.github.abai45.backend.controller;
 
 import io.github.abai45.backend.api.EventTypesApi;
 import io.github.abai45.backend.model.EventType;
 import io.github.abai45.backend.model.EventTypeView;
 import io.github.abai45.backend.model.FieldError;
 import io.github.abai45.backend.model.Slot;
+import io.github.abai45.backend.service.SlotService;
+import io.github.abai45.backend.store.EventTypeStore;
+import io.github.abai45.backend.validation.EventTypeValidator;
+import io.github.abai45.backend.validation.ValidationException;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
