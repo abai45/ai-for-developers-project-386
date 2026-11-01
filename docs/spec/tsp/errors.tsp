@@ -45,3 +45,15 @@ model ValidationErrorResponse {
   @body
   body: ProblemDetails;
 }
+
+/** Ответ 404 — запрошенный объект не найден. */
+model NotFoundResponse {
+  @statusCode
+  statusCode: 404;
+
+  @header("Content-Type")
+  contentType: "application/problem+json";
+
+  @body
+  body: ProblemDetails;
+}

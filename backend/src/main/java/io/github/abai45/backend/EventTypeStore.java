@@ -23,4 +23,9 @@ public class EventTypeStore {
     public void add(EventTypeView eventType) {
         eventTypes.add(eventType);
     }
+
+    /** Тип встречи по идентификатору; empty — если такого типа нет. */
+    public java.util.Optional<EventTypeView> findById(String id) {
+        return eventTypes.stream().filter(type -> type.getId().equals(id)).findFirst();
+    }
 }

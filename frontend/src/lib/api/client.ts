@@ -19,6 +19,24 @@ export async function listEventTypes(): Promise<EventTypeView[]> {
   return data
 }
 
+/** Слот записи из контракта. */
+export type Slot = components['schemas']['Slot']
+
+/**
+ * Слоты типа встречи в окне записи (голый массив, по возрастанию времени).
+ * Бросает ошибку при сетевом сбое или не-2xx — шаг показывает «Повторить».
+ */
+export async function listSlots(eventTypeId: string): Promise<Slot[]> {
+  const { data, error, response } = await api.GET(
+    '/api/event-types/{eventTypeId}/slots',
+    { params: { path: { eventTypeId } } },
+  )
+  if (!response.ok || error || !data) {
+    throw new Error('Не удалось загрузить слоты')
+  }
+  return data
+}
+
 /** Исход создания типа: создан (тело ответа) или отбит по полям (400 errors[]). */
 export type CreateEventTypeResult =
   | { kind: 'created'; eventType: EventTypeView }

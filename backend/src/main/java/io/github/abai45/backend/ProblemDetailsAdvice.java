@@ -26,4 +26,16 @@ public class ProblemDetailsAdvice {
                 .contentType(MediaType.APPLICATION_PROBLEM_JSON)
                 .body(problem);
     }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ProblemDetails> notFound(NotFoundException exception) {
+        ProblemDetails problem = new ProblemDetails();
+        problem.setType("about:blank");
+        problem.setTitle("Не найдено");
+        problem.setStatus(HttpStatus.NOT_FOUND.value());
+        problem.setDetail(exception.detail());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .body(problem);
+    }
 }
