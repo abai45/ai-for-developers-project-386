@@ -100,7 +100,7 @@
 								<skipDefaultInterface>true</skipDefaultInterface>
 								<useTags>true</useTags>
 								<useJakartaEe>true</useJakartaEe>
-								<useBeanValidation>true</useBeanValidation>
+								<useBeanValidation>false</useBeanValidation>
 								<openApiNullable>false</openApiNullable>
 								<dateLibrary>java8</dateLibrary>
 								<useSpringBoot3>true</useSpringBoot3>

@@ -14,4 +14,15 @@ interface EventTypes {
   @get
   @operationId("listEventTypes")
   listEventTypes(): EventTypeView[];
+
+  /** Создание типа встречи владельцем; дубли названий разрешены. */
+  @post
+  @operationId("createEventType")
+  createEventType(@body eventType: EventType): {
+    @statusCode
+    statusCode: 201;
+
+    @body
+    body: EventTypeView;
+  } | ValidationErrorResponse;
 }

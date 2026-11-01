@@ -18,4 +18,9 @@ public class EventTypeStore {
     public List<EventTypeView> list() {
         return List.copyOf(eventTypes);
     }
+
+    /** Добавляет тип встречи в конец списка. */
+    public void add(EventTypeView eventType) {
+        eventTypes.add(eventType);
+    }
 }
