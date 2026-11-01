@@ -342,7 +342,7 @@
           },
           "title": {
             "type": "string",
-            "description": "Краткая заголовок ошибки по-русски."
+            "description": "Краткий заголовок ошибки по-русски."
           },
           "status": {
             "type": "integer",

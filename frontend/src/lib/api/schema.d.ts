@@ -128,7 +128,7 @@ export interface components {
         ProblemDetails: {
             /** @description Тип проблемы; для этого сервиса — "about:blank". */
             type: string;
-            /** @description Краткая заголовок ошибки по-русски. */
+            /** @description Краткий заголовок ошибки по-русски. */
             title: string;
             /**
              * Format: int32
