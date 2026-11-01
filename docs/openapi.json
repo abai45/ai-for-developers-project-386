@@ -33,6 +33,46 @@
         "tags": [
           "event-types"
         ]
+      },
+      "post": {
+        "operationId": "createEventType",
+        "description": "Создание типа встречи владельцем; дубли названий разрешены.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "The request has succeeded and a new resource has been created as a result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventTypeView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ответ 400 с ошибками по полям — application/problem+json.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "event-types"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventType"
+              }
+            }
+          }
+        }
       }
     }
   },
@@ -90,6 +130,60 @@
           }
         ],
         "description": "Тип встречи в ответах сервера: то же, что EventType, плюс серверный идентификатор."
+      },
+      "FieldError": {
+        "type": "object",
+        "required": [
+          "field",
+          "message"
+        ],
+        "properties": {
+          "field": {
+            "type": "string",
+            "description": "Имя поля, не прошедшего проверку: name, description, durationMinutes или slotStepMinutes."
+          },
+          "message": {
+            "type": "string",
+            "description": "Понятное описание ошибки на русском — показывается прямо у поля."
+          }
+        },
+        "description": "Ошибка валидации одного поля."
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "required": [
+          "type",
+          "title",
+          "status",
+          "detail"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Тип проблемы; для этого сервиса — \"about:blank\"."
+          },
+          "title": {
+            "type": "string",
+            "description": "Краткая заголовок ошибки по-русски."
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "description": "HTTP-код ошибки."
+          },
+          "detail": {
+            "type": "string",
+            "description": "Человеческое описание проблемы на русском."
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldError"
+            },
+            "description": "Ошибки по полям — только для ответов 400."
+          }
+        },
+        "description": "Описание ошибки по RFC 9457 (application/problem+json) — единая модель\nдля всех ошибок сервиса."
       }
     }
   }
