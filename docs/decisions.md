@@ -106,8 +106,15 @@
 - **Модели списка типов** — `EventType` — тело создания (без `id`), `EventTypeView extends EventType` — ответ сервера с обязательным `id`; `GET /api/event-types` отвечает голым массивом `EventTypeView[]`; кросс-проверка `slotStepMinutes ≤ durationMinutes` — серверная, контракт фиксирует только `slotStepMinutes ≥ 1`
 - **Клиент** — рукописная обёртка `frontend/src/lib/api/client.ts` поверх `openapi-fetch` с типом `paths` из `schema.d.ts`; страницы и компоненты не вызывают `fetch` напрямую
 
-## Экран владельца `/owner` (вопрос карты #3, 31.10.2026)
+## Релизный процесс: release-please (тикет 3, #9)
 
+- **Инструмент** — `googleapis/release-please-action@v4` в `.github/workflows/release-please.yml`, запуск на `push: branches: [main]`; permissions `contents/pull-requests/issues: write`
+- **Тип релиза** — `release-type: simple`: версия живёт в `version.txt`, changelog — `CHANGELOG.md`; монорепозиторные схемы не используем (учебный проект, один релизный поток)
+- **Правила версионирования** — наследуют Conventional Commits проекта: `feat:` → minor, `fix:`/`refactor:`/`perf:` → patch, `BREAKING CHANGE`/`!` → major; до 1.0.0 — 0.x
+- **Поток** — после мержа в `main` release-please создаёт/обновляет release-PR («chore: release X.Y.Z»); мерж release-PR публикует GitHub Release; ручные теги запрещены
+- **Документация** — процесс описан в README (секция «Релизы») и в AGENTS.md (правила проекта)
+
+## Экран владельца `/owner` (вопрос карты #3, 31.10.2026)
 - **Страница** — один `h1` «Владелец» + рядом ссылка «На главную» → `/`; секции с `h2`: «Создать тип встречи», «Типы встреч», «Предстоящие встречи»
 - **Раскладка** — мобилка: один столбец в порядке форма → типы → встречи; десктоп (перелом `md`): две колонки — слева Card с формой, справа столбиком Card «Типы встреч» и Card «Предстоящие встречи»
 - **Форма создания типа** — поля: `name` (`Input`, 1–100), `description` (`Textarea`, до 500, `maxLength=500`, без счётчика), `durationMinutes` (`Input type=number`, лейбл «Длительность, мин», min 1 / max 510), `slotStepMinutes` (лейбл «Шаг слота, мин», min 1 / max от значения длительности); валидация: сервер — источник истины, клиент ставит только нативные атрибуты (`required`/`min`/`max`/`maxLength`), тексты ошибок — из ответа `400` (`errors: [{field, message}]` подсвечивает поле, `role="alert"`), без общей надписи

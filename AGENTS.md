@@ -26,6 +26,7 @@
 - Коммиты строго по Conventional Commits: `feat:`, `fix:`, `docs:`, `chore:`, `test:`, `refactor:`, `ci:`.
 - Коммит реализации ссылается на тикет, который он закрывает: `feat: запись на свободный слот (#12)`. GitHub превращает номер в ссылку, по истории видно, какой коммит какую задачу делал.
 - Архитектурные решения фиксируются в `docs/decisions.md` до реализации.
+- Релизы — через release-please (`.github/workflows/release-please.yml`): push в `main` создаёт/обновляет release-PR по Conventional Commits, релиз публикуется мержем этого PR; теги и версии вручную не двигаем.
 - Сгенерированные артефакты не правятся руками: `docs/openapi.json` и `frontend/src/lib/api/schema.d.ts` изменяются только через `mise run spec` (правка TypeSpec → генерация → код обеих сторон). CI пересобирает генерацию и ловит дрейф (`mise run spec-check`).
 - `mise run check` должен быть зелёным до каждого push; проверки не редактируются под задачу.
 
