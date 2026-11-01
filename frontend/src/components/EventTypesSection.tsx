@@ -13,7 +13,7 @@ type SectionState =
   | { status: 'error' }
   | { status: 'ok'; items: EventTypeView[] }
 
-export default function EventTypesSection() {
+export default function EventTypesSection({ refreshToken = 0 }: { refreshToken?: number }) {
   const [state, setState] = useState<SectionState>({ status: 'loading' })
   const [reloadKey, setReloadKey] = useState(0)
 
@@ -29,7 +29,7 @@ export default function EventTypesSection() {
     return () => {
       cancelled = true
     }
-  }, [reloadKey])
+  }, [reloadKey, refreshToken])
 
   const reload = useCallback(() => {
     setState({ status: 'loading' })

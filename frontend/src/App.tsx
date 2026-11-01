@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import Footer from '@/components/Footer'
 import Header from '@/components/Header'
+import { Toaster } from '@/components/ui/sonner'
 import LandingPage from '@/pages/LandingPage'
 import OwnerPage from '@/pages/OwnerPage'
 import StubPage from '@/pages/StubPage'
@@ -21,6 +22,7 @@ function App() {
         </Routes>
       </main>
       <Footer />
+      <Toaster position="top-center" />
     </div>
   )
 }

@@ -14,7 +14,8 @@ export interface paths {
         /** @description Список типов встреч владельца в порядке ответа сервера. */
         get: operations["listEventTypes"];
         put?: never;
-        post?: never;
+        /** @description Создание типа встречи владельцем; дубли названий разрешены. */
+        post: operations["createEventType"];
         delete?: never;
         options?: never;
         head?: never;
@@ -48,6 +49,32 @@ export interface components {
             /** @description Идентификатор типа встречи, устанавливается сервером. */
             id: string;
         } & components["schemas"]["EventType"];
+        /** @description Ошибка валидации одного поля. */
+        FieldError: {
+            /** @description Имя поля, не прошедшего проверку: name, description, durationMinutes или slotStepMinutes. */
+            field: string;
+            /** @description Понятное описание ошибки на русском — показывается прямо у поля. */
+            message: string;
+        };
+        /**
+         * @description Описание ошибки по RFC 9457 (application/problem+json) — единая модель
+         *     для всех ошибок сервиса.
+         */
+        ProblemDetails: {
+            /** @description Тип проблемы; для этого сервиса — "about:blank". */
+            type: string;
+            /** @description Краткая заголовок ошибки по-русски. */
+            title: string;
+            /**
+             * Format: int32
+             * @description HTTP-код ошибки.
+             */
+            status: number;
+            /** @description Человеческое описание проблемы на русском. */
+            detail: string;
+            /** @description Ошибки по полям — только для ответов 400. */
+            errors?: components["schemas"]["FieldError"][];
+        };
     };
     responses: never;
     parameters: never;
@@ -73,6 +100,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EventTypeView"][];
+                };
+            };
+        };
+    };
+    createEventType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventType"];
+            };
+        };
+        responses: {
+            /** @description The request has succeeded and a new resource has been created as a result. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventTypeView"];
+                };
+            };
+            /** @description Ответ 400 с ошибками по полям — application/problem+json. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
                 };
             };
         };
