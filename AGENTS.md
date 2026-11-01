@@ -8,12 +8,14 @@
 - `backend/` — Spring Boot 4.1, Java 21, Maven; дымовой эндпоинт `GET /api/health`
 - `frontend/` — React 19 + Vite + TypeScript + Tailwind CSS 4 + shadcn/ui; проксирует `/api` на бекенд
 - `docs/decisions.md` — архитектурные решения: параметры расписания, модель данных, эндпоинты, стек
+- Контрактная цепочка: TypeSpec-исходники `docs/spec/tsp/` → `mise run spec` → сгенерированные `docs/openapi.json` и `frontend/src/lib/api/schema.d.ts` (Java-артефакты openapi-generator — в `backend/target/`, не коммитятся)
 - Хранилище — in-memory (в памяти процесса; PostgreSQL запланирован отдельным шагом)
 
 ## Команды
 
 - `mise run setup` — установить зависимости бекенда и фронтенда
-- `mise run check` — все проверки: тесты, линт, типы, сборка (та же команда в CI)
+- `mise run spec` — генерация контракта: TypeSpec → OpenAPI → TS-типы
+- `mise run check` — все проверки: дрейф-чек контракта, тесты, линт, типы, сборка (та же команда в CI)
 - `mise run backend` — бекенд на :8080
 - `mise run frontend` — фронтенд на :5173
 - `mise run backend-test` / `mise run frontend-test` — тесты по частям
@@ -24,6 +26,7 @@
 - Коммиты строго по Conventional Commits: `feat:`, `fix:`, `docs:`, `chore:`, `test:`, `refactor:`, `ci:`.
 - Коммит реализации ссылается на тикет, который он закрывает: `feat: запись на свободный слот (#12)`. GitHub превращает номер в ссылку, по истории видно, какой коммит какую задачу делал.
 - Архитектурные решения фиксируются в `docs/decisions.md` до реализации.
+- Сгенерированные артефакты не правятся руками: `docs/openapi.json` и `frontend/src/lib/api/schema.d.ts` изменяются только через `mise run spec` (правка TypeSpec → генерация → код обеих сторон). CI пересобирает генерацию и ловит дрейф (`mise run spec-check`).
 - `mise run check` должен быть зелёным до каждого push; проверки не редактируются под задачу.
 
 ## Agent skills
