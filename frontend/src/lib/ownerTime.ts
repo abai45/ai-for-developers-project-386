@@ -38,6 +38,17 @@ export function formatOwnerTimeRange(startIso: string, endIso: string): string {
   return `${formatOwnerTime(startIso)}–${formatOwnerTime(endIso)}`
 }
 
+/** «27 октября, 10:00–11:00» — день и интервал слота в поясе владельца. */
+export function formatOwnerDateTimeRange(startIso: string, endIso: string): string {
+  const date = new Date(startIso)
+  const day = new Intl.DateTimeFormat('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    timeZone: OWNER_TIME_ZONE,
+  }).format(date)
+  return `${day}, ${formatOwnerTimeRange(startIso, endIso)}`
+}
+
 /** Сегодняшний день в поясе владельца (yyyy-mm-dd). */
 export function ownerTodayKey(): string {
   return ownerDayKey(new Date().toISOString())

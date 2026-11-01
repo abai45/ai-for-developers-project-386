@@ -37,6 +37,37 @@ export async function listSlots(eventTypeId: string): Promise<Slot[]> {
   return data
 }
 
+/**
+ * Запись встречи гостем. Разбор исходов: 201 — создано; 409 — слот занят;
+ * 400 — problem+json с detail (тост); остальное (сеть/5xx) бросает ошибку.
+ */
+export async function createMeeting(
+  input: components['schemas']['Meeting'],
+): Promise<CreateMeetingResult> {
+  const { data, error, response } = await api.POST('/api/meetings', {
+    body: input,
+  })
+  if (response.status === 409) {
+    return { kind: 'conflict' }
+  }
+  if (response.status === 400 && error) {
+    return { kind: 'problem', detail: error.detail }
+  }
+  if (!response.ok || !data) {
+    throw new Error('Не удалось записаться')
+  }
+  return { kind: 'created', meeting: data }
+}
+
+/** Встреча в ответе сервера (end вычислен сервером). */
+export type MeetingView = components['schemas']['MeetingView']
+
+/** Исход записи: успех, конфликт 409 или 400 с русским detail. */
+export type CreateMeetingResult =
+  | { kind: 'created'; meeting: MeetingView }
+  | { kind: 'conflict' }
+  | { kind: 'problem'; detail: string }
+
 /** Исход создания типа: создан (тело ответа) или отбит по полям (400 errors[]). */
 export type CreateEventTypeResult =
   | { kind: 'created'; eventType: EventTypeView }

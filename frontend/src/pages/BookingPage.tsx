@@ -1,19 +1,23 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import BookingStepper from '@/components/booking/BookingStepper'
 import CalendarStep from '@/components/booking/CalendarStep'
+import ConfirmStep from '@/components/booking/ConfirmStep'
 import EventTypeSelectStep from '@/components/booking/EventTypeSelectStep'
+import NameStep from '@/components/booking/NameStep'
 import { buttonVariants } from '@/components/ui/button'
-import type { EventTypeView, Slot } from '@/lib/api/client'
-
-// Шаг 3 «Имя» и шаг 4 «Подтверждение» — тикет #11.
-const STEP_NAMES = ['Тип', 'Календарь', 'Имя', 'Подтверждение'] as const
+import { createMeeting, type EventTypeView, type Slot } from '@/lib/api/client'
 
 export default function BookingPage() {
+  const navigate = useNavigate()
   const [step, setStep] = useState(1)
   const [eventType, setEventType] = useState<EventTypeView | null>(null)
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null)
+  const [guestName, setGuestName] = useState('')
+  const [pending, setPending] = useState(false)
+  const [conflictMessage, setConflictMessage] = useState<string | null>(null)
 
   function pickType(next: EventTypeView) {
     // Смена типа сбрасывает выбранный слот и день.
@@ -26,6 +30,37 @@ export default function BookingPage() {
   function goToStep(target: number) {
     // Возврат возможен только на пройденные шаги.
     if (target < step && target >= 1) setStep(target)
+  }
+
+  async function confirmBooking() {
+    if (!eventType || !selectedSlot || pending) return
+    setPending(true)
+    try {
+      const result = await createMeeting({
+        eventTypeId: eventType.id,
+        guestName,
+        start: selectedSlot.start,
+      })
+      if (result.kind === 'created') {
+        navigate('/book/success', {
+          state: { meeting: result.meeting, eventTypeName: eventType.name },
+        })
+        return
+      }
+      if (result.kind === 'conflict') {
+        // 409: возврат на «Календарь» с перезапросом слотов (шаг remount-ится),
+        // выбранный слот сброшен, тип и имя сохранены.
+        setConflictMessage('Слот только что заняли, выберите другой')
+        setSelectedSlot(null)
+        setStep(2)
+        return
+      }
+      toast.error(result.detail)
+    } catch {
+      toast.error('Не удалось записаться. Попробуйте ещё раз.')
+    } finally {
+      setPending(false)
+    }
   }
 
   return (
@@ -46,28 +81,45 @@ export default function BookingPage() {
           eventType={eventType}
           selectedDay={selectedDay}
           selectedSlot={selectedSlot}
+          conflictMessage={conflictMessage}
           onPickDay={day => {
             setSelectedDay(day)
             setSelectedSlot(null)
           }}
-          onPickSlot={setSelectedSlot}
-          onBack={() => setStep(1)}
+          onPickSlot={slot => {
+            setSelectedSlot(slot)
+            setConflictMessage(null)
+          }}
+          onBack={() => {
+            setConflictMessage(null)
+            setStep(1)
+          }}
           onNext={() => setStep(3)}
         />
       )}
 
-      {step >= 3 && (
-        <div className="flex flex-col items-start gap-3">
-          <p className="font-medium">Шаг «{STEP_NAMES[step - 1]}»</p>
-          <p className="text-muted-foreground">Раздел появится с тикетом #11.</p>
-          <button
-            type="button"
-            className={buttonVariants({ variant: 'outline' })}
-            onClick={() => setStep(step - 1)}
-          >
-            Назад
-          </button>
-        </div>
+      {step === 3 && eventType && selectedDay && selectedSlot && (
+        <NameStep
+          eventType={eventType}
+          selectedDay={selectedDay}
+          selectedSlot={selectedSlot}
+          guestName={guestName}
+          onNameChange={setGuestName}
+          onBack={() => setStep(2)}
+          onNext={() => setStep(4)}
+        />
+      )}
+
+      {step === 4 && eventType && selectedDay && selectedSlot && (
+        <ConfirmStep
+          eventType={eventType}
+          selectedDay={selectedDay}
+          selectedSlot={selectedSlot}
+          guestName={guestName}
+          pending={pending}
+          onBack={() => setStep(3)}
+          onConfirm={confirmBooking}
+        />
       )}
     </section>
   )
