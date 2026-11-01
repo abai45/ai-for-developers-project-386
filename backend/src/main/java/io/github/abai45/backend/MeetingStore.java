@@ -37,4 +37,15 @@ public class MeetingStore {
     public List<MeetingView> snapshot() {
         return List.copyOf(meetings);
     }
+
+    /**
+     * Предстоящие встречи всех типов: ещё не начавшиеся (start >= now),
+     * отсортированные по возрастанию времени начала.
+     */
+    public List<MeetingView> upcoming(java.time.OffsetDateTime now) {
+        return meetings.stream()
+                .filter(meeting -> !meeting.getStart().isBefore(now))
+                .sorted(java.util.Comparator.comparing(MeetingView::getStart))
+                .toList();
+    }
 }

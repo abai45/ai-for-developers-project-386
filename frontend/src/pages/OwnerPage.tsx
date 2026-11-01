@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import CreateEventTypeForm from '@/components/CreateEventTypeForm'
 import EventTypesSection from '@/components/EventTypesSection'
+import UpcomingMeetingsSection from '@/components/UpcomingMeetingsSection'
 import { buttonVariants } from '@/components/ui/button'
 
 export default function OwnerPage() {
@@ -19,6 +20,7 @@ export default function OwnerPage() {
         <CreateEventTypeForm onCreated={() => setTypesRefresh(key => key + 1)} />
         <div className="flex flex-col gap-6">
           <EventTypesSection refreshToken={typesRefresh} />
+          <UpcomingMeetingsSection />
         </div>
       </div>
     </section>

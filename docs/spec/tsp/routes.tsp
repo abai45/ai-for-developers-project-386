@@ -58,4 +58,12 @@ interface Meetings {
     @body
     body: MeetingView;
   } | ValidationErrorResponse | NotFoundResponse | ConflictResponse;
+
+  /**
+   * Предстоящие встречи всех типов: только ещё не начавшиеся,
+   * по возрастанию времени начала; голый массив.
+   */
+  @get
+  @operationId("listMeetings")
+  listMeetings(): MeetingView[];
 }

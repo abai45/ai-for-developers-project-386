@@ -49,7 +49,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * @description Предстоящие встречи всех типов: только ещё не начавшиеся,
+         *     по возрастанию времени начала; голый массив.
+         */
+        get: operations["listMeetings"];
         put?: never;
         /**
          * @description Запись гостя на слот. Проверка пересечений атомарна: пересечение
@@ -246,6 +250,26 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    listMeetings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingView"][];
                 };
             };
         };

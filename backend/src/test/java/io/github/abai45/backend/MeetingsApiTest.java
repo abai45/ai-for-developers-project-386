@@ -38,7 +38,7 @@ import org.springframework.test.annotation.DirtiesContext;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureTestRestTemplate
 // Встречи этого класса не должны протекать в контекст других тестовых классов
-// ( SlotsApiTest проверяет, что без записей все слоты свободны).
+// (SlotsApiTest проверяет, что без записей все слоты свободны).
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class MeetingsApiTest {
 

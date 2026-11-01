@@ -51,6 +51,11 @@ public class MeetingsController implements MeetingsApi {
         return ResponseEntity.status(HttpStatus.CREATED).body(view);
     }
 
+    @Override
+    public ResponseEntity<List<MeetingView>> listMeetings() {
+        return ResponseEntity.ok(meetingStore.upcoming(java.time.OffsetDateTime.now()));
+    }
+
     private static List<FieldError> validateGuestName(String guestName) {
         List<FieldError> errors = new ArrayList<>();
         if (guestName == null || guestName.isBlank()) {

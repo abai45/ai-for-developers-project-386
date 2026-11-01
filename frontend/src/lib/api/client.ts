@@ -62,6 +62,18 @@ export async function createMeeting(
 /** Встреча в ответе сервера (end вычислен сервером). */
 export type MeetingView = components['schemas']['MeetingView']
 
+/**
+ * Предстоящие встречи всех типов: только ещё не начавшиеся, по возрастанию
+ * времени начала (сортирует сервер). Бросает ошибку при сбое или не-2xx.
+ */
+export async function listMeetings(): Promise<MeetingView[]> {
+  const { data, error, response } = await api.GET('/api/meetings')
+  if (!response.ok || error || !data) {
+    throw new Error('Не удалось загрузить встречи')
+  }
+  return data
+}
+
 /** Исход записи: успех, конфликт 409 или 400 с русским detail. */
 export type CreateMeetingResult =
   | { kind: 'created'; meeting: MeetingView }
