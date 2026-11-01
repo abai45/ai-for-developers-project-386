@@ -12,24 +12,12 @@ import {
   formatOwnerDay,
   formatOwnerTimeRange,
   ownerDayKey,
-  ownerTodayKey,
 } from '@/lib/ownerTime'
 
 type SlotsState =
   | { status: 'loading' }
   | { status: 'error' }
   | { status: 'ok'; slots: Slot[] }
-
-/** Окно записи: 14 календарных дней со следующего дня (канон сервера). */
-function windowDayKeys(): string[] {
-  const keys: string[] = []
-  for (let offset = 1; offset <= 14; offset++) {
-    const date = new Date(`${ownerTodayKey()}T12:00:00Z`)
-    date.setUTCDate(date.getUTCDate() + offset)
-    keys.push(date.toISOString().slice(0, 10))
-  }
-  return keys
-}
 
 const WEEKDAYS = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс']
 
@@ -54,11 +42,6 @@ export default function CalendarStep({
 }) {
   const [state, setState] = useState<SlotsState>({ status: 'loading' })
   const [reloadKey, setReloadKey] = useState(0)
-  const windowKeys = useMemo(() => windowDayKeys(), [])
-  const windowMonths = useMemo(
-    () => Array.from(new Set(windowKeys.map(dayKey => dayKey.slice(0, 7)))),
-    [windowKeys],
-  )
   const [monthIndex, setMonthIndex] = useState(0)
 
   // Каждый вход на шаг перезапрашивает слоты (канон свежести слотов).
@@ -76,6 +59,14 @@ export default function CalendarStep({
       cancelled = true
     }
   }, [eventType.id, reloadKey])
+
+  // Окно записи берём из ответа сервера (сервер — источник истины расписания):
+  // уникальные дни слотов = дни окна, уникальные месяцы = границы листания.
+  const windowMonths = useMemo(() => {
+    if (state.status !== 'ok') return []
+    const months = new Set(state.slots.map(slot => ownerDayKey(slot.start).slice(0, 7)))
+    return Array.from(months).sort()
+  }, [state])
 
   const freeByDay = useMemo(() => {
     const counts = new Map<string, number>()
@@ -122,7 +113,20 @@ export default function CalendarStep({
   }
 
   const loading = state.status === 'loading'
-  const currentMonth = windowMonths[monthIndex]
+  if (!loading && windowMonths.length === 0) {
+    // Сервер всегда отдаёт слоты для дней окна; пустой ответ — аномалия.
+    return (
+      <Card role="alert">
+        <CardContent className="flex flex-col items-start gap-3 py-6">
+          <p className="text-muted-foreground">Не удалось загрузить данные</p>
+          <Button variant="outline" onClick={() => setReloadKey(key => key + 1)}>
+            Повторить
+          </Button>
+        </CardContent>
+      </Card>
+    )
+  }
+  const currentMonth = windowMonths[Math.min(monthIndex, windowMonths.length - 1)]
   const [year, month] = currentMonth.split('-').map(Number)
   const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate()
   // Понедельник — первый столбец: сдвиг первого дня месяца (0..6).
@@ -183,9 +187,10 @@ export default function CalendarStep({
                   ))}
                   {Array.from({ length: daysInMonth }, (_, i) => {
                     const dayKey = `${currentMonth}-${String(i + 1).padStart(2, '0')}`
-                    const inWindow = windowKeys.includes(dayKey)
+                    // Кликабелен только день окна со свободными слотами;
+                    // дни вне окна отсутствуют в ответе сервера → free = 0.
                     const free = freeByDay.get(dayKey) ?? 0
-                    const clickable = inWindow && free > 0
+                    const clickable = free > 0
                     const isSelected = selectedDay === dayKey
                     return (
                       <button
